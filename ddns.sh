@@ -1,10 +1,10 @@
+#!/opt/bin/bash
 #########################################################################
 # File Name: ddns.sh
 # Author: cmheia
 # mail: cmheia@gmail.com
 # Created Time: 2015/04/11 00:55
 #########################################################################
-#!/opt/bin/bash
 
 #source /etc/profile
 export PATH='/opt/sbin:/opt/bin:/opt/usr/sbin:/opt/usr/bin:/bin:/usr/bin:/sbin:/usr/sbin'
@@ -52,6 +52,7 @@ trace_log=$log_dir"/trace.log"
 output_tmp=$log_dir"/output_tmp.log"
 output_log=$log_dir"/output.log"
 check_time=$log_dir"/checks.log"
+message_log=$log_dir"/message.log"
 
 ################################################################################
 # dnspod api
@@ -76,7 +77,8 @@ current_checks=
 
 log_msg()
 {
-#	logger -t DDNS "$@"
+	logger -t DDNS "$@"
+	echo "$@" >> "$message_log"
 	echo "$@"
 }
 
@@ -153,6 +155,7 @@ modify_dns_record()
 save_global_ip()
 {
 echo saving_global_ip:"$global_ip"
+eval current_global_ip=$(cat "$saved_global_ip")
 cat > "$saved_global_ip"<<-EOF
 ${global_ip}
 EOF
@@ -288,9 +291,7 @@ fi
 echo "fetched:current_global_ip [$current_global_ip]."
 
 valid_global_ip=`cat "$saved_global_ip" | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' | wc -l`
-if [ x"1" = x"$valid_global_ip" ]; then
-	eval current_global_ip=$(cat "$saved_global_ip")
-else
+if [ x"1" != x"$valid_global_ip" ]; then
 	log_msg "current_global_ip is illegal, abort."
 	exit
 fi
@@ -328,9 +329,9 @@ if [ x"$dns_ip" = x"$current_global_ip" ]; then
 else
 	echo "submit new ip."
 #	echo "modify dns record domain_id=${domain_id_array[0]}&record_id=${record_id_array[2]}&sub_domain=${sub_domain_array[2]}&value=$current_global_ip&record_type=${record_type_array[2]}"
-	modify_dns_record "${domain_id_array[0]}" "${record_id_array[2]}" "${sub_domain_array[2]}" "$current_global_ip" "${record_type_array[2]}"
 	modify_dns_record "${domain_id_array[0]}" "${record_id_array[0]}" "${sub_domain_array[0]}" "$current_global_ip" "${record_type_array[0]}"
 	modify_dns_record "${domain_id_array[0]}" "${record_id_array[1]}" "${sub_domain_array[1]}" "$current_global_ip" "${record_type_array[1]}"
+	modify_dns_record "${domain_id_array[0]}" "${record_id_array[2]}" "${sub_domain_array[2]}" "$current_global_ip" "${record_type_array[2]}"
 # renew dns record
 #	log_msg "update ddns record from " "$dns_ip" " to " "$current_global_ip"
 #	update_ddns_naked_record "${domain_id_array[0]}" "${record_id_array[0]}"
