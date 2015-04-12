@@ -155,7 +155,6 @@ modify_dns_record()
 save_global_ip()
 {
 echo saving_global_ip:"$global_ip"
-eval current_global_ip=$(cat "$saved_global_ip")
 cat > "$saved_global_ip"<<-EOF
 ${global_ip}
 EOF
@@ -241,6 +240,7 @@ get_global_ip()
 	 ;;
 	esac
 	save_global_ip
+	current_global_ip=$global_ip
 }
 
 get_interface_ip()
@@ -295,7 +295,7 @@ if [ x"1" != x"$valid_global_ip" ]; then
 	log_msg "current_global_ip is illegal, abort."
 	exit
 fi
-echo "valid:current_global_ip."
+echo "valid:current_global_ip [$current_global_ip]."
 
 ################################################################################
 # get dns record
@@ -315,7 +315,7 @@ echo "valid:dns_ip [$dns_ip]"
 # if global ip arrdess not equals to interface ip address, your're in innernet.
 ################################################################################
 if [ x"$interface_ip" != x"$current_global_ip" ]; then
-	log_msg "innernet, re dial."
+	log_msg "innernet, re dial. i=[$interface_ip],o=[$current_global_ip]"
 	service wan restart
 	exit
 fi
